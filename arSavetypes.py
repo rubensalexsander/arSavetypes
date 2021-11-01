@@ -33,6 +33,20 @@ Objetos:
 		key - Key que será limpa
 	)
 
+- Tipos de valores:
+
+	#Já suportados:
+
+	String - str
+	Inteiro - int
+	Flutuante - float
+	Lista - list
+	Tupla - tuple
+
+	#Em desenvolvimento:
+	Dicionários - map
+	Boleanos - bool
+
 """
 
 from random import randint
@@ -41,20 +55,20 @@ from arSqlite import Db
 class EasyDb:
 	def __init__(self, local='db\db.db'):
 		self.__local = local
-		self.tabelaPrincipal = 'table01'
+		self.__tabela_principal = 'table01'
 		try:
-			self.db = Db(self.__local)
-			self.db.getTabela(self.tabelaPrincipal)
+			self.__db = Db(self.__local)
+			self.__db.getTabela(self.__tabela_principal)
 		except:
-			self.db.novaTabela(self.tabelaPrincipal, ('id TEXT NOT NULL PRIMARY KEY', 'valor TEXT NOT NULL'))
+			self.__db.novaTabela(self.__tabela_principal, ('id TEXT NOT NULL PRIMARY KEY', 'valor TEXT NOT NULL'))
 	
 	def __edit_key(self, lastKey, new_key):
 		if lastKey in self.my_keys():
-			self.db.editarInstancia(self.tabelaPrincipal, lastKey, 'id', new_key)
+			self.__db.editarInstancia(self.__tabela_principal, lastKey, 'id', new_key)
 			
 	def __edit_value(self, key, new_value):
 		if key in self.my_keys():
-			self.db.editarInstancia(self.tabelaPrincipal, key, 'valor', new_value)
+			self.__db.editarInstancia(self.__tabela_principal, key, 'valor', new_value)
 	
 	def push(self, key=None, valor=None, force=None):
 		def new_key(char='#'):
@@ -78,15 +92,15 @@ class EasyDb:
 		
 		if type(valor) == type(''):
 			valor = 'stri: ' + str(valor)
-			self.db.novaInstancia(self.tabelaPrincipal, ['id', 'valor'], (key, valor))
+			self.__db.novaInstancia(self.__tabela_principal, ['id', 'valor'], (key, valor))
 		
 		elif type(valor) == type(0):
 			valor = 'inte: ' + str(valor)
-			self.db.novaInstancia(self.tabelaPrincipal, ['id', 'valor'], (key, valor))
+			self.__db.novaInstancia(self.__tabela_principal, ['id', 'valor'], (key, valor))
 		
 		elif type(valor) == type(1.0):
 			valor = 'flot: ' + str(valor)
-			self.db.novaInstancia(self.tabelaPrincipal, ['id', 'valor'], (key, valor))
+			self.__db.novaInstancia(self.__tabela_principal, ['id', 'valor'], (key, valor))
 		
 		else:
 			if type(valor) == type([]): valorListString = 'list:'
@@ -95,13 +109,13 @@ class EasyDb:
 			for i in valor:
 				
 				valorListString += (' ' + self.push(None, i))
-			self.db.novaInstancia(self.tabelaPrincipal, ['id', 'valor'], (key, valorListString))
+			self.__db.novaInstancia(self.__tabela_principal, ['id', 'valor'], (key, valorListString))
 			
 		return key
 	
 	def pull(self, key):
 		try:
-			dados = self.db.getInstancia(self.tabelaPrincipal, ['id', key])[0][1]
+			dados = self.__db.getInstancia(self.__tabela_principal, ['id', key])[0][1]
 			tipo = dados[:4]
 			conteudo = dados[6:]
 			
@@ -116,35 +130,36 @@ class EasyDb:
 	
 	def my_keys(self, filter='#'):
 		keys = []
-		for i in self.db.getTabela(self.tabelaPrincipal):
+		for i in self.__db.getTabela(self.__tabela_principal):
 			if not i[0][0] == filter: keys.append(i[0])
 		return keys
 
 	def add(self, key, value):
-		dados = self.db.getInstancia(self.tabelaPrincipal, ['id', key])[0][1]
+		dados = self.__db.getInstancia(self.__tabela_principal, ['id', key])[0][1]
 		
 		if dados[:4] == 'list' or dados[:4] == 'tupl':
 			lastValue = dados
 			new_value = lastValue + ' ' + self.push(key=None, valor=value)
-			self.db.editarInstancia(self.tabelaPrincipal, key, 'valor', new_value)
+			self.__db.editarInstancia(self.__tabela_principal, key, 'valor', new_value)
 		else:
 			print(f'Key: {key} is not list or tuple.')
 
 	def clean_key(self, key):
 		try: 
-			valor = self.db.getInstancia(self.tabelaPrincipal, ['id', key])[0][1]
+			valor = self.__db.getInstancia(self.__tabela_principal, ['id', key])[0][1]
 			tipo = valor[:4]
 			conteudo = valor[6:]
 
 		except: return False
 
 		if tipo == 'stri' or tipo == 'inte' or tipo == 'flot':
-			self.db.delInstancia(self.tabelaPrincipal, ["id", key])
+			self.__db.delInstancia(self.__tabela_principal, ["id", key])
 		elif tipo == 'list' or tipo == 'tupl':
 			for i in conteudo.split(): self.clean_key(i)
-			self.db.delInstancia(self.tabelaPrincipal, ["id", key])
+			self.__db.delInstancia(self.__tabela_principal, ["id", key])
 		
 		return True
 	
 if __name__ == '__main__':
+	stDb1 = EasyDb()
 	print(stDb1.my_keys())
